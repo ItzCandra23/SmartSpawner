@@ -1,0 +1,1 @@
+export const MobExperiences: Record<string, number | [number, number]> = {};

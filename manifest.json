@@ -1,0 +1,49 @@
+{
+	"format_version": 2,
+	"header": {
+		"name": "§aSmartSpawner",
+		"description": "§bhttps://discord.gg/naRZ8tE3yC §afor more updates and information!",
+		"uuid": "2a20e618-3e80-4c05-8cab-49c78319fcf0",
+		"version": [
+			1,
+			0,
+			0
+		],
+		"min_engine_version": [
+			1,
+			21,
+			90
+		]
+	},
+	"modules": [
+		{
+			"type": "data",
+			"uuid": "12bcd47f-f0c5-4389-9522-186653856639",
+			"version": "1.0.0"
+		},
+		{
+			"description": "scripts",
+			"uuid": "7b6eadff-7c1f-4cbf-8135-77e590eb0258",
+			"version": "1.0.0",
+			"type": "script",
+			"language": "javascript",
+			"entry": "scripts/index.js"
+		}
+	],
+	"dependencies": [
+		{
+            "module_name": "@minecraft/server",
+            "version": "beta"
+        },
+		{
+            "module_name": "@minecraft/server-ui",
+            "version": "beta"
+        }
+	],
+    "metadata": {
+        "authors": [ "ItzCandra23 (github.com/ItzCandra23)" ],
+        "license": "MIT License",
+        "url": "https://mit-license.org/"
+    },
+	"capabilities": [ "script_eval" ]
+}
