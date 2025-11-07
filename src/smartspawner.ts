@@ -305,47 +305,6 @@ export class SmartSpawner {
         
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${location.x}:${location.y}:${location.z}`, JSON.stringify(data));
     }
-
-
-
-
-
-    static onSpawnerPlace(player: Player, block: Block, entityType: EntityType): void {
-        try {
-            this.setSmartSpawner(entityType, block);
-
-            player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Spawner §bActivated`);
-            player.playSound("conduit.activate");
-        } catch (err: any) {
-            player.sendMessage("§c" + err.message);
-        }
-    }
-
-    static onAddSpawnerStack(player: Player, block: Block, entityType: EntityType): void {
-        const container = player.getComponent(EntityInventoryComponent.componentId)?.container;
-        if (!container) return;
-
-        const mainhand = container.getItem(player.selectedSlotIndex);
-        if (!mainhand) return;
-
-        const amount = mainhand.amount;
-        const dimension = block.dimension;
-        const location = block.location;
-        
-        try {
-            const result = this.addSpawnerStack(1, location, dimension.id);
-
-            if (amount > 1) {
-                mainhand.amount -= 1;
-                container.setItem(player.selectedSlotIndex, mainhand);
-            } else container.setItem(player.selectedSlotIndex);
-
-            player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Stacked §d${result}§f spawners!`);
-            player.playSound("random.levelup");
-        } catch (err: any) {
-            player.sendMessage("§c" + err.message);
-        }
-    }
 }
 
 const PlacingProcess = new Map<string, EntityType>();
@@ -378,7 +337,29 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
             system.run(() => {
                 if (SmartSpawner.getItemSpawnerType(itemStack)?.id !== smartspawner.entityId) return;
 
-                SmartSpawner.onAddSpawnerStack(player, block, entityType);
+                const container = player.getComponent(EntityInventoryComponent.componentId)?.container;
+                if (!container) return;
+
+                const mainhand = container.getItem(player.selectedSlotIndex);
+                if (!mainhand) return;
+
+                const amount = mainhand.amount;
+                const dimension = block.dimension;
+                const location = block.location;
+                
+                try {
+                    const result = SmartSpawner.addSpawnerStack(1, location, dimension.id);
+
+                    if (amount > 1) {
+                        mainhand.amount -= 1;
+                        container.setItem(player.selectedSlotIndex, mainhand);
+                    } else container.setItem(player.selectedSlotIndex);
+
+                    player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Stacked §d${result}§f spawners!`);
+                    player.playSound("random.levelup");
+                } catch (err: any) {
+                    player.sendMessage("§c" + err.message);
+                }
             });
         } else {
             PlacingProcess.set(playerId, entityType);
@@ -401,17 +382,31 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
 });
 
 world.afterEvents.playerPlaceBlock.subscribe((ev) => {
+    const block = ev.block;
+    if (block.typeId !== "minecraft:mob_spawner") return;
+
     const entityType = PlacingProcess.get(ev.player.id);
     if (!entityType) return;
 
     PlacingProcess.delete(ev.player.id);
 
     system.run(() => {
-        SmartSpawner.onSpawnerPlace(ev.player, ev.block, entityType);
+        const player = ev.player;
+
+        try {
+            SmartSpawner.setSmartSpawner(entityType, block);
+
+            player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Spawner §bActivated`);
+            player.playSound("conduit.activate");
+        } catch (err: any) {
+            player.sendMessage("§c" + err.message);
+        }
     });
 });
 
 world.beforeEvents.playerBreakBlock.subscribe((ev) => {
+    if (ev.cancel) return;
+    
     const block = ev.block;
     const player = ev.player;
     const itemStack = ev.itemStack;
@@ -421,13 +416,14 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
 
     if (!smartspawner) return;
     
-    if (!itemStack?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
-        ev.cancel = true;
-        player.sendMessage(`§cSilk touch needed!`);
-        return;
-    }
+    ev.cancel = true;
 
     system.run(() => {
+        if (!itemStack?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
+            player.sendMessage(`§cSilk touch needed!`);
+            return;
+        }
+
         if (smartspawner.stack > 1) {
             const container = block.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
 
@@ -442,8 +438,7 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
             block.dimension.spawnItem(itemStack, pos);
 
             player.sendMessage(`§f[§b${formatID(smartspawner.entityId)}§f] Spawner §cDeactivated`);
+            player.playSound("conduit.deactivate");
         }
-
-        player.playSound("conduit.deactivate");
     });
 });
