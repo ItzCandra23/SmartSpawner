@@ -349,6 +349,37 @@ export class SmartSpawner {
         data.expecience = 0;
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${location.x}:${location.y}:${location.z}`, JSON.stringify(data));
     }
+    static *generateSpawnerLoot(location, dimensionId) {
+        const data = this.getSmartSpawner(location, dimensionId);
+        if (!data)
+            return;
+        const entityType = EntityTypes.get(data.entityId);
+        if (!entityType)
+            return;
+        const stack = data.stack;
+        const amount = Math.floor(Math.random() * ((stack * configuration.spawner.max_mobs) - stack + 1)) + stack;
+        const experience = this.generateSpawnerExperience(entityType, amount);
+        try {
+            this.addExperienceLoot(experience, location, dimensionId);
+        }
+        catch (err) { }
+        const lootTableManager = world.getLootTableManager();
+        for (let i = 0; i < amount; i++) {
+            const items = lootTableManager.generateLootFromEntityType(entityType);
+            if (!items)
+                continue;
+            for (const itemStack of items) {
+                const itemJson = ItemJson.getItemJson(itemStack);
+                try {
+                    this.addInventoryLoot(itemJson, location, dimensionId);
+                }
+                catch (err) {
+                    break;
+                }
+            }
+            yield;
+        }
+    }
 }
 const PlacingProcess = new Map();
 const InteractDelay = new Map();
