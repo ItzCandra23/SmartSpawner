@@ -17,7 +17,7 @@ export class SmartSpawnerGenerator {
                 if (!dimension.isChunkLoaded(location)) continue;
                 
                 const players = dimension.getPlayers({ location, maxDistance: configuration.spawner.range });
-                if (!players.length) return;
+                if (!players.length) continue;
                 
                 system.runJob(SmartSpawner.generateSpawnerLoot(location, dimensionId));
             }
