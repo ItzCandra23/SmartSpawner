@@ -1,1 +1,1 @@
-export const MobExperiences: Record<string, number | [number, number]> = {};
+export let MobExperiences: Record<string, number | [number, number]> = {};
