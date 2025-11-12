@@ -1,8 +1,7 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityInventoryComponent, EntityType, Player, system } from "@minecraft/server";
 import { SmartSpawner } from "./smartspawner";
-import { formatID } from "./utils/formatId";
 
-system.beforeEvents.startup.subscribe(({ customCommandRegistry, blockComponentRegistry, itemComponentRegistry }) => {
+system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
 
     customCommandRegistry.registerCommand({
         name: "smartspawner:givespawner",

@@ -1,6 +1,6 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityInventoryComponent, Player, system } from "@minecraft/server";
 import { SmartSpawner } from "./smartspawner";
-system.beforeEvents.startup.subscribe(({ customCommandRegistry, blockComponentRegistry, itemComponentRegistry }) => {
+system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
     customCommandRegistry.registerCommand({
         name: "smartspawner:givespawner",
         description: "Gives an specific smart spawner to a player",

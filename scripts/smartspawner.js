@@ -1,14 +1,104 @@
 import { BlockInventoryComponent, EntityInventoryComponent, EntityTypes, ItemEnchantableComponent, ItemStack, system, world } from "@minecraft/server";
-import { formatID } from "./utils/formatId";
+import { formatId } from "./utils/format";
 import { ItemJson } from "./utils/itemjson";
 import { MobExperiences } from "./mob_experiences";
-const configuration = {
+import { SmartSpawnerUI } from "./smartspawnerui";
+export const configuration = {
     spawner: {
         range: 16,
         delay: 25,
+        max_mobs: 4,
         max_stack: 64,
         max_experience: 1000,
         inventory_size: 45,
+    },
+    spawner_ui: {
+        Main: {
+            title: "{stack} {nametag} Spawner",
+            description: "{nametag} Spawner\n\n§7 Stack: §d{stack}§r\n§7 Mobs: §d{min_mobs} - {max_mobs}§r\n§7 Range: §d{range} Blocks§r\n§7 Delay: §d{delay}s§r\n",
+            buttons: {
+                ManageSpawer: {
+                    text: "§dManage Spawner§r\n§o§bStack: {stack}",
+                    texture: "textures/blocks/mob_spawner",
+                },
+                SpawnerStorage: {
+                    text: "§dSpawner Storage§r\n§o§bSlots: {slots} / {max_slots}",
+                    texture: "textures/blocks/chest_front",
+                },
+                Experience: {
+                    text: "§dExperience§r\n§o§bXP: {experience} / {max_experience}",
+                    texture: "textures/items/experience_bottle",
+                },
+            },
+        },
+        SpawnerStorage: {
+            title: "{nametag} Spawner Storage",
+            description: "{nametag} Spawner\n\n§7 Slots: §b{slots} / {max_slots}§r\n",
+            buttons: {
+                Item: {
+                    text: "§fx{amount} §d{nametag}\n§b{typeid}",
+                    texture: undefined,
+                },
+                NextPage: {
+                    text: "§eNext page",
+                    texture: "textures/ui/ps4_dpad_right",
+                },
+                PrevPage: {
+                    text: "§ePrevious page",
+                    texture: "textures/ui/ps4_dpad_left",
+                },
+                Refresh: {
+                    text: "§bRefresh",
+                    texture: "textures/ui/refresh",
+                },
+                TakeAll: {
+                    text: "§6Take All",
+                    texture: "textures/ui/free_download",
+                },
+                Back: {
+                    text: "§7[ §cBACK§7 ]",
+                    texture: "textures/blocks/barrier",
+                },
+            },
+        },
+        ManageSpawner: {
+            title: "Spawner Stacker",
+            description: "{nametag} Spawner\n\n§7 Stack: §b{stack}§r\n",
+            buttons: {
+                Increase: {
+                    text: "§a+ Increase Stack§r\n§o[Click to Increase]",
+                    texture: "textures/blocks/mob_spawner",
+                },
+                Decrease: {
+                    text: "§c- Decrease Stack§r\n§o[Click to Decrease]",
+                    texture: "textures/blocks/mob_spawner",
+                },
+                Back: {
+                    text: "§7[ §cBACK§7 ]",
+                    texture: "textures/blocks/barrier",
+                },
+            }
+        },
+        IncreaseStack: {
+            title: "Increase Stack",
+            description: "{nametag} Spawner\n\n§7 Stack: §b{stack}§r\n",
+            contents: {
+                Value: {
+                    text: "Increase Stack",
+                    placeholder: "64",
+                }
+            }
+        },
+        DecreaseStack: {
+            title: "Decrease Stack",
+            description: "{nametag} Spawner\n\n§7 Stack: §b{stack}§r\n",
+            contents: {
+                Value: {
+                    text: "Decrease Stack",
+                    placeholder: "64",
+                }
+            }
+        },
     },
 };
 export class SmartSpawner {
@@ -20,7 +110,7 @@ export class SmartSpawner {
      */
     static createItemStack(entityType, amount) {
         const itemStack = new ItemStack("minecraft:mob_spawner", amount);
-        itemStack.nameTag = `§a${formatID(entityType.id)} Spawner`;
+        itemStack.nameTag = `§a${formatId(entityType.id)} Spawner`;
         itemStack.setLore([
             this.getPrefixLore() + "§eA Smart Spawner",
             entityType.id,
@@ -302,13 +392,14 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
                     }
                     else
                         container.setItem(player.selectedSlotIndex);
-                    player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Stacked §d${result}§f spawners!`);
+                    player.sendMessage(`§f[§d${formatId(entityType.id)}§f] Stacked §d${result}§f spawners!`);
                     player.playSound("random.levelup");
                 }
                 catch (err) {
                     player.sendMessage("§c" + err.message);
                 }
             });
+            return;
         }
         else {
             PlacingProcess.set(playerId, entityType);
@@ -322,6 +413,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
         if (now - interactDelay < 500)
             return;
         InteractDelay.set(playerId, now);
+        system.run(() => {
+            SmartSpawnerUI.openSpawner(player, block.location, block.dimension.id);
+        });
     }
 });
 world.afterEvents.playerPlaceBlock.subscribe((ev) => {
@@ -336,7 +430,7 @@ world.afterEvents.playerPlaceBlock.subscribe((ev) => {
         const player = ev.player;
         try {
             SmartSpawner.setSmartSpawner(entityType, block);
-            player.sendMessage(`§f[§d${formatID(entityType.id)}§f] Spawner §bActivated`);
+            player.sendMessage(`§f[§d${formatId(entityType.id)}§f] Spawner §bActivated`);
             player.playSound("conduit.activate");
         }
         catch (err) {
@@ -361,18 +455,23 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
             player.sendMessage(`§cSilk touch needed!`);
             return;
         }
-        if (smartspawner.stack > 1) {
-            const container = block.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
-            SmartSpawner.takeSpawnerStack(1, location, dimensionId, container);
+        try {
+            if (smartspawner.stack > 1) {
+                const container = block.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
+                SmartSpawner.takeSpawnerStack(1, location, dimensionId, container);
+            }
+            else {
+                const itemStack = SmartSpawner.createItemStack({ id: smartspawner.entityId }, smartspawner.stack);
+                const pos = { x: location.x + 0.5, y: location.y + 0.5, z: location.z + 0.5 };
+                SmartSpawner.deleteSmartSpawner(location, dimensionId);
+                block.dimension.setBlockType(location, "minecraft:air");
+                block.dimension.spawnItem(itemStack, pos);
+                player.sendMessage(`§f[§d${formatId(smartspawner.entityId)}§f] Spawner §cDeactivated`);
+                player.playSound("conduit.deactivate");
+            }
         }
-        else {
-            const itemStack = SmartSpawner.createItemStack({ id: smartspawner.entityId }, smartspawner.stack);
-            const pos = { x: location.x + 0.5, y: location.y + 0.5, z: location.z + 0.5 };
+        catch (err) {
             SmartSpawner.deleteSmartSpawner(location, dimensionId);
-            block.dimension.setBlockType(location, "minecraft:air");
-            block.dimension.spawnItem(itemStack, pos);
-            player.sendMessage(`§f[§b${formatID(smartspawner.entityId)}§f] Spawner §cDeactivated`);
-            player.playSound("conduit.deactivate");
         }
     });
 });
