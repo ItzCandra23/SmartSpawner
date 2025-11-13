@@ -307,8 +307,7 @@ export class SmartSpawner {
     }
     /**Generate experience value from entity type */
     static generateSpawnerExperience(entityType, multiple = 1) {
-        const dynamicValue = world.getDynamicProperty("SmartSpawnerExperience:" + entityType.id);
-        const rawValue = dynamicValue ? JSON.parse(dynamicValue) : MobExperiences[entityType.id];
+        const rawValue = MobExperiences[entityType.id];
         if (!rawValue)
             return 0;
         if (Array.isArray(rawValue))
