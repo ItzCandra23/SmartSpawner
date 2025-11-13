@@ -14,7 +14,7 @@ export class SmartSpawnerGenerator {
                     continue;
                 const players = dimension.getPlayers({ location, maxDistance: configuration.spawner.range });
                 if (!players.length)
-                    return;
+                    continue;
                 system.runJob(SmartSpawner.generateSpawnerLoot(location, dimensionId));
             }
         }, seconds * 20);
