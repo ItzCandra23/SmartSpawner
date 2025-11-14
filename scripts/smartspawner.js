@@ -394,6 +394,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
     PlacingProcess.delete(playerId);
     const smartspawner = SmartSpawner.getSmartSpawner(block.location, block.dimension.id);
     if (itemStack && itemStack.typeId === "minecraft:mob_spawner") {
+        if (smartspawner)
+            ev.cancel = true;
         const entityType = SmartSpawner.getItemSpawnerType(itemStack);
         if (!entityType)
             return;
@@ -473,7 +475,7 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
         return;
     const block = ev.block;
     const player = ev.player;
-    const itemStack = ev.itemStack;
+    const tool = ev.itemStack;
     const location = block.location;
     const dimensionId = block.dimension.id;
     const smartspawner = SmartSpawner.getSmartSpawner(location, dimensionId);
@@ -481,7 +483,7 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
         return;
     ev.cancel = true;
     system.run(() => {
-        if (!itemStack?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
+        if (!tool?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
             player.sendMessage(`§cSilk touch needed!`);
             return;
         }
@@ -504,4 +506,12 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
             SmartSpawner.deleteSmartSpawner(location, dimensionId);
         }
     });
+});
+world.beforeEvents.explosion.subscribe((ev) => {
+    let impactedBlocks = [];
+    ev.getImpactedBlocks().forEach((block) => {
+        if (!SmartSpawner.getSmartSpawner(block.location, block.dimension.id))
+            impactedBlocks.push(block);
+    });
+    ev.setImpactedBlocks(impactedBlocks);
 });

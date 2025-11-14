@@ -1,4 +1,4 @@
-import { Block, BlockInventoryComponent, Container, EntityInventoryComponent, EntityType, EntityTypes, ItemEnchantableComponent, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
+import { Block, BlockInventoryComponent, Container, EntityInventoryComponent, EntityType, EntityTypes, ItemDurabilityComponent, ItemEnchantableComponent, ItemStack, Player, system, Vector3, world } from "@minecraft/server";
 import { formatId } from "./utils/format";
 import { ItemBase, ItemJson } from "./utils/itemjson";
 import { MobExperiences } from "./mob_experiences";
@@ -449,6 +449,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
     const smartspawner = SmartSpawner.getSmartSpawner(block.location, block.dimension.id);
 
     if (itemStack && itemStack.typeId === "minecraft:mob_spawner") {
+        if (smartspawner) ev.cancel = true;
+
         const entityType = SmartSpawner.getItemSpawnerType(itemStack);
         if (!entityType) return;
         
@@ -537,7 +539,7 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
     
     const block = ev.block;
     const player = ev.player;
-    const itemStack = ev.itemStack;
+    const tool = ev.itemStack;
     const location = block.location;
     const dimensionId = block.dimension.id;
     const smartspawner = SmartSpawner.getSmartSpawner(location, dimensionId);
@@ -547,7 +549,7 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
     ev.cancel = true;
 
     system.run(() => {
-        if (!itemStack?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
+        if (!tool?.getComponent(ItemEnchantableComponent.componentId)?.hasEnchantment("minecraft:silk_touch")) {
             player.sendMessage(`§cSilk touch needed!`);
             return;
         }
@@ -573,4 +575,14 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
             SmartSpawner.deleteSmartSpawner(location, dimensionId);
         }
     });
+});
+
+world.beforeEvents.explosion.subscribe((ev) => {
+    let impactedBlocks: Block[] = [];
+
+    ev.getImpactedBlocks().forEach((block) => {
+        if (!SmartSpawner.getSmartSpawner(block.location, block.dimension.id)) impactedBlocks.push(block);
+    });
+
+    ev.setImpactedBlocks(impactedBlocks);
 });
