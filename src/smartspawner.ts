@@ -377,9 +377,10 @@ export class SmartSpawner {
         if (!data) throw new Error("Spawner not found!");
 
         const max_experience = data.stack * configuration.spawner.max_experience;
-        if (experience < 1 || data.expecience + experience > max_experience) return;
+        if (experience < 1) return;
 
-        data.expecience += experience;
+        if ((data.expecience + experience) > max_experience) data.expecience = max_experience;
+        else data.expecience += experience;
 
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${location.x}:${location.y}:${location.z}`, JSON.stringify(data));
     }
@@ -449,10 +450,6 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
     const smartspawner = SmartSpawner.getSmartSpawner(block.location, block.dimension.id);
 
     if (itemStack && itemStack.typeId === "minecraft:mob_spawner") {
-        if (smartspawner) ev.cancel = true;
-
-        const entityType = SmartSpawner.getItemSpawnerType(itemStack);
-        if (!entityType) return;
         
         if (smartspawner) {
             ev.cancel = true;
@@ -461,13 +458,18 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
             InteractDelay.set(playerId, now);
 
             system.run(() => {
-                if (SmartSpawner.getItemSpawnerType(itemStack)?.id !== smartspawner.entityId) return;
-
+                
                 const container = player.getComponent(EntityInventoryComponent.componentId)?.container;
                 if (!container) return;
 
-                const mainhand = container.getItem(player.selectedSlotIndex);
+                const selectedSlotIndex = player.selectedSlotIndex;
+                const mainhand = container.getItem(selectedSlotIndex);
                 if (!mainhand) return;
+                
+                const entityType = SmartSpawner.getItemSpawnerType(mainhand);
+                if (!entityType) return;
+
+                if (entityType.id !== smartspawner.entityId) return;
 
                 const amount = mainhand.amount;
                 const dimension = block.dimension;
@@ -478,8 +480,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
 
                     if (amount > 1) {
                         mainhand.amount -= 1;
-                        container.setItem(player.selectedSlotIndex, mainhand);
-                    } else container.setItem(player.selectedSlotIndex);
+                        container.setItem(selectedSlotIndex, mainhand);
+                    } else container.setItem(selectedSlotIndex);
 
                     player.sendMessage(`§f[§d${formatId(entityType.id)}§f] Stacked §d${result}§f spawners!`);
                     player.playSound("random.levelup");
@@ -490,6 +492,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
 
             return;
         } else {
+            const entityType = SmartSpawner.getItemSpawnerType(itemStack);
+            if (!entityType) return;
+
             PlacingProcess.set(playerId, entityType);
             return;
         }

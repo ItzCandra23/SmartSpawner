@@ -27,7 +27,7 @@ export class SmartSpawnerGenerator {
         runId = this.generateInterval(seconds);
     }
 }
-let runId = SmartSpawnerGenerator.generateInterval(5);
+let runId = SmartSpawnerGenerator.generateInterval(configuration.spawner.delay);
 function* createSpawnerParticles(location, dimension) {
     const particleType = "minecraft:basic_flame_particle";
     const particlesPerTick = 15;
