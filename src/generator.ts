@@ -1,4 +1,4 @@
-import { Dimension, MolangVariableMap, system, Vector3, world } from "@minecraft/server";
+import { Dimension, system, Vector3, world } from "@minecraft/server";
 import { configuration, SmartSpawner } from "./smartspawner";
 
 export class SmartSpawnerGenerator {
@@ -20,7 +20,7 @@ export class SmartSpawnerGenerator {
                 if (!players.length) continue;
                 
                 system.runJob(SmartSpawner.generateSpawnerLoot(location, dimensionId));
-                system.runJob(createSpawnerParticles(location, dimension));
+                system.runJob(this.createSpawnerParticles(location, dimension));
             }
         }, seconds * 20);
     }
@@ -31,33 +31,33 @@ export class SmartSpawnerGenerator {
         system.clearRun(runId);
         runId = this.generateInterval(seconds);
     }
+
+    static* createSpawnerParticles(location: Vector3, dimension: Dimension) {
+        const particleType = "minecraft:basic_flame_particle";
+        const particlesPerTick = 15;
+        const spread = { x: 1, y: 1, z: 1 };
+
+        try {
+            for (let i = 0; i < particlesPerTick; i++) {
+                const offsetX = (Math.random() - 0.5) * spread.x;
+                const offsetY = (Math.random() - 0.5) * spread.y;
+                const offsetZ = (Math.random() - 0.5) * spread.z;
+                
+                const particlePos = {
+                    x: location.x + 0.5 + offsetX,
+                    y: location.y + 0.5 + offsetY,
+                    z: location.z + 0.5 + offsetZ
+                };
+                
+                dimension.spawnParticle(
+                    particleType,
+                    particlePos,
+                );
+
+                yield;
+            }
+        } catch (error) {}
+    }
 }
 
 let runId = SmartSpawnerGenerator.generateInterval(configuration.spawner.delay);
-
-function* createSpawnerParticles(location: Vector3, dimension: Dimension) {
-    const particleType = "minecraft:basic_flame_particle";
-    const particlesPerTick = 15;
-    const spread = { x: 1, y: 1, z: 1 };
-
-    try {
-        for (let i = 0; i < particlesPerTick; i++) {
-            const offsetX = (Math.random() - 0.5) * spread.x;
-            const offsetY = (Math.random() - 0.5) * spread.y;
-            const offsetZ = (Math.random() - 0.5) * spread.z;
-            
-            const particlePos = {
-                x: location.x + 0.5 + offsetX,
-                y: location.y + 0.5 + offsetY,
-                z: location.z + 0.5 + offsetZ
-            };
-            
-            dimension.spawnParticle(
-                particleType,
-                particlePos,
-            );
-
-            yield;
-        }
-    } catch (error) {}
-}

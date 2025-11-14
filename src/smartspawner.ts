@@ -66,7 +66,7 @@ export const configuration = {
                     texture: "textures/ui/free_download",
                 },
                 Back: {
-                    text: "§7[ §cBACK§7 ]",
+                    text: "§8[ §cBACK§8 ]",
                     texture: "textures/blocks/barrier",
                 },
             },
@@ -84,7 +84,7 @@ export const configuration = {
                     texture: "textures/blocks/mob_spawner",
                 },
                 Back: {
-                    text: "§7[ §cBACK§7 ]",
+                    text: "§8[ §cBACK§8 ]",
                     texture: "textures/blocks/barrier",
                 },
             }
