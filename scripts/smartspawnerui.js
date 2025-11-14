@@ -115,7 +115,7 @@ export class SmartSpawnerUI {
             }
             if (r.selection === i) {
                 try {
-                    const container = world.getDimension(dimensionId).getBlockAbove(location)?.getComponent(BlockInventoryComponent.componentId)?.container;
+                    const container = world.getDimension(dimensionId).getBlock(location)?.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
                     SmartSpawner.takeAllInventoryLoot(location, dimensionId, container);
                     this.spawnerStorage(player, location, dimensionId, 1, onback);
                 }
@@ -133,7 +133,7 @@ export class SmartSpawnerUI {
             }
             const slot = ((page - 1) * configuration.spawner.inventory_size) + r.selection;
             try {
-                const container = world.getDimension(dimensionId).getBlockAbove(location)?.getComponent(BlockInventoryComponent.componentId)?.container;
+                const container = world.getDimension(dimensionId).getBlock(location)?.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
                 SmartSpawner.takeInventoryLoot(slot, location, dimensionId, container);
                 this.spawnerStorage(player, location, dimensionId, page, onback);
             }
@@ -259,7 +259,7 @@ export class SmartSpawnerUI {
                 return onback && onback();
             try {
                 const amount = Math.floor(value);
-                const container = world.getDimension(dimensionId).getBlockAbove(location)?.getComponent(BlockInventoryComponent.componentId)?.container;
+                const container = world.getDimension(dimensionId).getBlock(location)?.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
                 SmartSpawner.takeSpawnerStack(amount, location, dimensionId, container);
                 player.sendMessage(`§d-${amount}§f Spawner Stack`);
                 player.playSound("conduit.deactivate");
