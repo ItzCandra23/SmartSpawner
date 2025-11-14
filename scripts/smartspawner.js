@@ -15,7 +15,7 @@ export const configuration = {
     spawner_ui: {
         Main: {
             title: "{stack} {nametag} Spawner",
-            description: "{nametag} Spawner\n\n§7 Stack: §d{stack}§r\n§7 Mobs: §d{min_mobs} - {max_mobs}§r\n§7 Range: §d{range} Blocks§r\n§7 Delay: §d{delay}s§r\n",
+            description: "{nametag} Spawner\n\n§7 Stack: §d{stack}§r\n§7 Mobs: §d{min_mobs} - {max_mobs}§r\n§7 Range: §d{range} Blocks§r\n§7 Delay: §d{delay}s§r\n\n---",
             buttons: {
                 ManageSpawer: {
                     text: "§dManage Spawner§r\n§o§bStack: {stack}",
@@ -263,7 +263,7 @@ export class SmartSpawner {
         if (!data)
             throw new Error("Spawner not found!");
         const inventory = ItemJson.addItemToArray(itemJson, data.inventory);
-        data.inventory = inventory.slice(0, configuration.spawner.inventory_size);
+        data.inventory = inventory.slice(0, data.stack * configuration.spawner.inventory_size);
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${location.x}:${location.y}:${location.z}`, JSON.stringify(data));
     }
     /**Take loot from spawner inventory slot */
