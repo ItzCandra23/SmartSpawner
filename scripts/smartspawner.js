@@ -3,7 +3,11 @@ import { formatId } from "./utils/format";
 import { ItemJson } from "./utils/itemjson";
 import { MobExperiences } from "./mob_experiences";
 import { SmartSpawnerUI } from "./smartspawnerui";
+import { CustomLoot } from "./customloot";
 export const configuration = {
+    loot: {
+        generateFromTable: true,
+    },
     spawner: {
         range: 16,
         delay: 25,
@@ -230,10 +234,19 @@ export class SmartSpawner {
     static generateSpawnerItemsLoot(entityType, multiple = 1) {
         if (multiple < 1)
             multiple = 1;
+        const customLoot = CustomLoot.generateLootJson(entityType.id);
+        if (customLoot !== undefined)
+            return customLoot;
         let data = [];
         const lootTableManager = world.getLootTableManager();
         for (let i = 0; i < multiple; i++) {
-            for (const lootItem of lootTableManager.generateLootFromEntityType(entityType) ?? []) {
+            const lootTable = configuration.loot.generateFromTable ? lootTableManager.getLootTable("entities/" + entityType.id.split(":")[1]) : undefined;
+            if (configuration.loot.generateFromTable && !lootTable)
+                continue;
+            const items = lootTable ? lootTableManager.generateLootFromTable(lootTable) : lootTableManager.generateLootFromEntityType(entityType);
+            if (!items)
+                continue;
+            for (const lootItem of items) {
                 data.push(ItemJson.getItemJson(lootItem));
             }
         }
@@ -365,13 +378,11 @@ export class SmartSpawner {
             this.addExperienceLoot(experience, location, dimensionId);
         }
         catch (err) { }
-        const lootTableManager = world.getLootTableManager();
         for (let i = 0; i < amount; i++) {
-            const items = lootTableManager.generateLootFromEntityType(entityType);
+            const items = this.generateSpawnerItemsLoot(entityType);
             if (!items)
                 continue;
-            for (const itemStack of items) {
-                const itemJson = ItemJson.getItemJson(itemStack);
+            for (const itemJson of items) {
                 try {
                     this.addInventoryLoot(itemJson, location, dimensionId);
                 }
