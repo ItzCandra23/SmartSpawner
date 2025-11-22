@@ -1,6 +1,5 @@
 import { ItemStack, world } from "@minecraft/server";
 import { ItemBase, ItemJson, ItemJsonData } from "./utils/itemjson";
-import { MobExperiences } from "./mob_experiences";
 
 export interface ItemLoot {
     chance: number;
@@ -54,7 +53,7 @@ export class CustomLoot {
     // static setLootTable(typeId: string, path: string): string | undefined {
     //     const key = typeId.toLowerCase();
     //     let data = this.getLoot(key);
-    //     if (!data) throw new Error("Custom Loot not found!");
+    //     if (!data) throw new Error("Loot not found!");
 
     //     const value = path.trim();
 
@@ -64,10 +63,10 @@ export class CustomLoot {
     //     return value ? value : undefined;
     // }
 
-    static seLootExperience(typeId: string, value1: number, value2: number = value1): [number, number] {
+    static setLootExperience(typeId: string, value1: number, value2: number = value1): [number, number] {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         let min = Math.floor(value1);
         let max = Math.floor(value2);
@@ -85,7 +84,7 @@ export class CustomLoot {
     static addLootItem(typeId: string, itemLoot: ItemLoot): ItemLoot {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         if (itemLoot.item.amount && itemLoot.item.amount <= 0) itemLoot.item.amount = 1;
         if (itemLoot.chance < 0) itemLoot.chance = 0;
@@ -101,7 +100,7 @@ export class CustomLoot {
     static removeLootItem(typeId: string, index: number): void {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         if (index < 0 || index >= data.loot.length) throw new Error("Item not found!");
 
@@ -113,7 +112,7 @@ export class CustomLoot {
     static clearLootItem(typeId: string): void {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         data.loot = [];
         
@@ -123,7 +122,7 @@ export class CustomLoot {
     static addLootTable(typeId: string, lootTable: string): string {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
         if (!lootTable.trim()) throw new Error("Loot Table not found!");
 
         data.lootTables.push(lootTable);
@@ -135,7 +134,7 @@ export class CustomLoot {
     static removeLootTable(typeId: string, index: number): void {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         if (index < 0 || index >= data.lootTables.length) throw new Error("Loot Table not found!");
 
@@ -147,13 +146,14 @@ export class CustomLoot {
     static clearLootTable(typeId: string): void {
         const key = typeId.toLowerCase();
         let data = this.getLoot(key);
-        if (!data) throw new Error("Custom Loot not found!");
+        if (!data) throw new Error("Loot not found!");
 
         data.lootTables = [];
         
         world.setDynamicProperty(this.DB_PREFIX_KEY + key, JSON.stringify(data));
     }
 
+    /**@deprecated */
     static generateLoot(typeId: string): ItemStack[] | undefined {
         const data = MobLoots[typeId];
         if (!data) return undefined;
@@ -167,7 +167,7 @@ export class CustomLoot {
                 const max = lootItem.item.amount ?? 1;
                 const min = lootItem.min_amount;
 
-                lootItem.item.amount = (Math.random() * (max - min) + min);
+                lootItem.item.amount = Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
             if (lootItem.item.amount === 0) continue;
@@ -209,7 +209,7 @@ export class CustomLoot {
                 const max = lootItem.item.amount ?? 1;
                 const min = lootItem.min_amount;
 
-                lootItem.item.amount = (Math.random() * (max - min) + min);
+                lootItem.item.amount = Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
             if (lootItem.item.amount === 0) continue;
@@ -240,15 +240,22 @@ export class CustomLoot {
         return items;
     }
 
+    static generateExperience(typeId: string, multiple: number = 1): number | undefined {
+        const data = MobLoots[typeId];
+        if (!data) return undefined;
+
+        return Math.round(Math.random() * (data.experience[0] * multiple - data.experience[1] * multiple)) + data.experience[1] * multiple;
+    }
+
     static updateLoot() {
         const loots = this.getAllLoots();
 
         for (const loot of loots) {
             const typeId = loot.typeId;
-            const experience = loot.experience[0] === loot.experience[1] ? loot.experience[0] : loot.experience;
-
-            MobExperiences[typeId] = experience;
             MobLoots[typeId] = loot;
+
+            // const experience = loot.experience[0] === loot.experience[1] ? loot.experience[0] : loot.experience;
+            // MobExperiences[typeId] = experience;
         }
     }
 }

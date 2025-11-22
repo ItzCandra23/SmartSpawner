@@ -54,8 +54,8 @@ export class SmartSpawnerUI {
             if (r.selection === 1) this.spawnerStorage(player, location, dimensionId, 1, () => this.openSpawner(player, location, dimensionId));
             if (r.selection === 2) {
                 try {
-                    SmartSpawner.takeExperienceLoot(player, location, dimensionId);
-                    player.playSound("random.orb");
+                    const xp = SmartSpawner.takeExperienceLoot(player, location, dimensionId);
+                    if (xp) player.playSound("random.orb");
                     
                     this.openSpawner(player, location, dimensionId);
                 } catch(err) {}

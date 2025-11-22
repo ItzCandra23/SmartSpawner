@@ -1,4 +1,9 @@
-import { Enchantment, ItemDurabilityComponent, ItemEnchantableComponent, ItemInventoryComponent, ItemLockMode, ItemPotionComponent, ItemStack, Potions } from "@minecraft/server";
+import { Enchantment, EnchantmentTypes, ItemDurabilityComponent, ItemEnchantableComponent, ItemInventoryComponent, ItemLockMode, ItemPotionComponent, ItemStack, Potions } from "@minecraft/server";
+
+export interface RawEnchantment {
+    typeId: string;
+    level: number;
+}
 
 export interface ItemJsonData {
 
@@ -11,7 +16,7 @@ export interface ItemJsonData {
     keepOnDeath?: boolean;
     
     // Not for Potion Json
-    enchants?: Enchantment[];
+    enchants?: RawEnchantment[];
     durability_damage?: number;
     canDestroy?: string[];
     canPlaceOn?: string[];
@@ -71,7 +76,7 @@ export class ItemJson {
             const enchantable = itemStack.getComponent(ItemEnchantableComponent.componentId);
             const enchantments = enchantable?.getEnchantments();
 
-            if (enchantments?.length) data.enchants = enchantments;
+            if (enchantments?.length) data.enchants = enchantments.map((ench) => ({ typeId: ench.type.id, level: ench.level }));
 
             const container = itemStack.getComponent(ItemInventoryComponent.componentId)?.container;
 
@@ -111,7 +116,11 @@ export class ItemJson {
             if (itemJson.enchants) {
                 const enchantable = itemStack.getComponent(ItemEnchantableComponent.componentId);
 
-                if (enchantable) for (const enchantment of itemJson.enchants) {
+                if (enchantable) for (const rawenchantment of itemJson.enchants) {
+                    const enchantmentType = EnchantmentTypes.get(rawenchantment.typeId);
+                    if (!enchantmentType) continue;
+                    
+                    const enchantment: Enchantment = { type: enchantmentType, level: rawenchantment.level };
                     if (enchantable.canAddEnchantment(enchantment)) enchantable.addEnchantment(enchantment);
                 }
             }

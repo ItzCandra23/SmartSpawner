@@ -237,12 +237,14 @@ export class SmartSpawner {
     static generateSpawnerItemsLoot(entityType, multiple = 1) {
         if (multiple < 1)
             multiple = 1;
-        const customLoot = CustomLoot.generateLootJson(entityType.id);
-        if (customLoot !== undefined)
-            return customLoot;
         let data = [];
         const lootTableManager = world.getLootTableManager();
         for (let i = 0; i < multiple; i++) {
+            const customLoot = CustomLoot.generateLootJson(entityType.id);
+            if (customLoot !== undefined) {
+                data.push(...customLoot);
+                continue;
+            }
             const lootTable = configuration.loot.generateFromTable ? lootTableManager.getLootTable("entities/" + entityType.id.split(":")[1]) : undefined;
             if (configuration.loot.generateFromTable && !lootTable)
                 continue;
@@ -323,6 +325,9 @@ export class SmartSpawner {
     }
     /**Generate experience value from entity type */
     static generateSpawnerExperience(entityType, multiple = 1) {
+        const customLoot = CustomLoot.generateExperience(entityType.id, multiple);
+        if (customLoot !== undefined)
+            return customLoot;
         const rawValue = MobExperiences[entityType.id];
         if (!rawValue)
             return 0;
@@ -363,9 +368,11 @@ export class SmartSpawner {
         let data = this.getSmartSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
-        player.addExperience(data.expecience);
+        const xp = data.expecience;
+        player.addExperience(xp);
         data.expecience = 0;
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${location.x}:${location.y}:${location.z}`, JSON.stringify(data));
+        return xp;
     }
     static *generateSpawnerLoot(location, dimensionId) {
         const data = this.getSmartSpawner(location, dimensionId);
