@@ -1,4 +1,4 @@
-export let MOB_LOOT_TEBLES = {
+export let MobLootTables = {
     "minecraft:armor_stand": [
         "entities/armor_stand"
     ],

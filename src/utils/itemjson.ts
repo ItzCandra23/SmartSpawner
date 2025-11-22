@@ -204,7 +204,9 @@ export class ItemJson {
             }
         }
 
-        if (itemJson.amount) {
+        if (itemJson.amount === undefined) itemJson.amount = 1;
+
+        if (itemJson.amount > 0) {
             if (!maxAmount || itemJson.amount > maxAmount) itemJson.amount = maxAmount;
 
             items.push(itemJson);

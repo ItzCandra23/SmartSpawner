@@ -4,6 +4,7 @@ import { ItemBase, ItemJson } from "./utils/itemjson";
 import { MobExperiences } from "./mob_experiences";
 import { SmartSpawnerUI } from "./smartspawnerui";
 import { CustomLoot } from "./customloot";
+import { MobLootTables } from "./mob_loot_tables";
 
 export interface SmartSpawnerData {
     entityId: string;
@@ -261,7 +262,9 @@ export class SmartSpawner {
         return data.stack;
     }
 
-    /**Generate items loot from entity type */
+    /**Generate items loot from entity type 
+     * @deprecated - Get your own
+    */
     static generateSpawnerItemsLoot(entityType: EntityType, multiple: number = 1): ItemBase[] {
         if (multiple < 1) multiple = 1;
 
@@ -424,12 +427,49 @@ export class SmartSpawner {
             this.addExperienceLoot(experience, location, dimensionId);
         } catch(err) {}
 
-        for (let i = 0; i < amount; i++) {
-            const items = this.generateSpawnerItemsLoot(entityType);
-            if (!items) continue;
+        const lootTableManager = world.getLootTableManager();
 
-            for (const itemJson of items) {
+        for (let i = 0; i < amount; i++) {
+            let lootResult: { type: "itemJson"; items: ItemBase[]; } | { type: "itemStack"; items: ItemStack[]; } | undefined = undefined;
+
+            const customLoots = CustomLoot.generateLootJson(entityType.id);
+            if (customLoots) {
+                lootResult = {
+                    type: "itemJson",
+                    items: customLoots,
+                };
+            }
+
+            if (!lootResult && configuration.loot.generateFromTable) {
+                const pathTables = MobLootTables.hasOwnProperty(entityType.id) ? MobLootTables[entityType.id] : ["entities/" + entityType.id.split(":")[1]];
+                
+                lootResult = {
+                    type: "itemStack",
+                    items: [],
+                };
+
+                for (const pathTable of pathTables) {
+                    const lootTable = lootTableManager.getLootTable(pathTable);
+                    if (!lootTable) continue;
+
+                    const lootItems = lootTableManager.generateLootFromTable(lootTable);
+                    if (lootItems) lootResult.items.push(...lootItems);
+                }
+            }
+
+            if (!lootResult && !configuration.loot.generateFromTable) {
+                const lootItems = lootTableManager.generateLootFromEntityType(entityType);
+                if (lootItems) lootResult = {
+                    type: "itemStack",
+                    items: lootItems,
+                }
+            }
+
+            if (!lootResult?.items.length) continue;
+
+            for (const itemLoot of lootResult.items) {
                 try {
+                    const itemJson = lootResult.type === "itemStack" ? ItemJson.getItemJson(itemLoot as ItemStack) : itemLoot;
                     this.addInventoryLoot(itemJson, location, dimensionId);
                 } catch(err) {
                     break;

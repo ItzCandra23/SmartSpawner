@@ -1,4 +1,4 @@
-export let MOB_LOOT_TEBLES: Record<string, string[]> = {
+export let MobLootTables: Record<string, string[]> = {
     "minecraft:armor_stand": [
         "entities/armor_stand"
     ],
