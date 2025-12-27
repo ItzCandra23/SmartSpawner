@@ -1,7 +1,7 @@
 import { Dimension, system, Vector3, world } from "@minecraft/server";
-import { configuration, SmartSpawner } from "./smartspawner";
+import { configuration, ActiveSpawner } from "./activespawner";
 
-export class SmartSpawnerGenerator {
+export class ActiveSpawnerGenerator {
 
     static getIntervalId(): number {
         return runId;
@@ -9,7 +9,7 @@ export class SmartSpawnerGenerator {
     
     static generateInterval(seconds: number): number {
         return system.runInterval(() => {
-            for (const spawner of SmartSpawner.getAllSmartSpawner()) {
+            for (const spawner of ActiveSpawner.getAllActiveSpawner()) {
                 const location = spawner.location;
                 const dimensionId = spawner.dimensionId;
                 const dimension = world.getDimension(dimensionId);
@@ -19,7 +19,7 @@ export class SmartSpawnerGenerator {
                 const players = dimension.getPlayers({ location, maxDistance: configuration.spawner.range });
                 if (!players.length) continue;
                 
-                system.runJob(SmartSpawner.generateSpawnerLoot(location, dimensionId));
+                system.runJob(ActiveSpawner.generateSpawnerLoot(location, dimensionId));
                 system.runJob(this.createSpawnerParticles(location, dimension));
             }
         }, seconds * 20);
@@ -60,4 +60,4 @@ export class SmartSpawnerGenerator {
     }
 }
 
-let runId = SmartSpawnerGenerator.generateInterval(configuration.spawner.delay);
+let runId = ActiveSpawnerGenerator.generateInterval(configuration.spawner.delay);

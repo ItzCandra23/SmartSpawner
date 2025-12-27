@@ -1,5 +1,5 @@
 import { CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus, EntityInventoryComponent, Player, system } from "@minecraft/server";
-import { SmartSpawner } from "./smartspawner";
+import { ActiveSpawner } from "./activespawner";
 import { CustomLoot } from "./customloot";
 import { MobExperiences } from "./mob_experiences";
 import { ItemJson } from "./utils/itemjson";
@@ -7,8 +7,8 @@ import { CustomLootUI } from "./customlootui";
 import { formatId } from "./utils/format";
 system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
     customCommandRegistry.registerCommand({
-        name: "smartspawner:givespawner",
-        description: "Gives an specific smart spawner to a player",
+        name: "ActiveSpawner:givespawner",
+        description: "Gives an specific active spawner to a player",
         permissionLevel: CommandPermissionLevel.GameDirectors,
         mandatoryParameters: [
             {
@@ -32,14 +32,14 @@ system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
             return { status: CustomCommandStatus.Failure, message: "Player not found!" };
         system.run(() => {
             try {
-                const itemStack = SmartSpawner.createItemStack(entityType, amount);
+                const itemStack = ActiveSpawner.createItemStack(entityType, amount);
                 targets.forEach((player) => {
                     const inventory = player.getComponent(EntityInventoryComponent.componentId);
                     if (!inventory)
                         return;
                     inventory.container.addItem(itemStack);
                 });
-                return { status: CustomCommandStatus.Success, message: `Smart spawner sended to ${targets.map((v) => v.name).join()}!` };
+                return { status: CustomCommandStatus.Success, message: `Active spawner sended to ${targets.map((v) => v.name).join()}!` };
             }
             catch (err) {
                 if (err.message)
@@ -66,17 +66,17 @@ system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
         SelectLoot["table"] = "table";
         SelectLoot["xp"] = "xp";
     })(SelectLoot || (SelectLoot = {}));
-    customCommandRegistry.registerEnum("smartspawner:lootaction", Object.values(LootAction));
-    customCommandRegistry.registerEnum("smartspawner:selectloot", Object.values(SelectLoot));
+    customCommandRegistry.registerEnum("ActiveSpawner:lootaction", Object.values(LootAction));
+    customCommandRegistry.registerEnum("ActiveSpawner:selectloot", Object.values(SelectLoot));
     customCommandRegistry.registerCommand({
-        name: "smartspawner:ssloot",
-        description: "Custom Loot for Smart Spawner",
+        name: "ActiveSpawner:ssloot",
+        description: "Custom Loot for Active Spawner",
         permissionLevel: CommandPermissionLevel.GameDirectors,
         optionalParameters: [
             {
                 name: "action",
                 type: CustomCommandParamType.Enum,
-                enumName: "smartspawner:lootaction"
+                enumName: "ActiveSpawner:lootaction"
             },
             {
                 name: "entity",
@@ -85,7 +85,7 @@ system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
             {
                 name: "select",
                 type: CustomCommandParamType.Enum,
-                enumName: "smartspawner:selectloot"
+                enumName: "ActiveSpawner:selectloot"
             },
             {
                 name: "value",
@@ -358,7 +358,7 @@ system.beforeEvents.startup.subscribe(({ customCommandRegistry }) => {
         }
         return {
             status: CustomCommandStatus.Failure,
-            message: "Command not found! Check https://github.com/ItzCandra23/SmartSpawner for more!",
+            message: "Command not found! Check https://github.com/ItzCandra23/ActiveSpawner for more!",
         };
     });
 });

@@ -1,12 +1,12 @@
 import { system, world } from "@minecraft/server";
-import { configuration, SmartSpawner } from "./smartspawner";
-export class SmartSpawnerGenerator {
+import { configuration, ActiveSpawner } from "./activespawner";
+export class ActiveSpawnerGenerator {
     static getIntervalId() {
         return runId;
     }
     static generateInterval(seconds) {
         return system.runInterval(() => {
-            for (const spawner of SmartSpawner.getAllSmartSpawner()) {
+            for (const spawner of ActiveSpawner.getAllActiveSpawner()) {
                 const location = spawner.location;
                 const dimensionId = spawner.dimensionId;
                 const dimension = world.getDimension(dimensionId);
@@ -15,7 +15,7 @@ export class SmartSpawnerGenerator {
                 const players = dimension.getPlayers({ location, maxDistance: configuration.spawner.range });
                 if (!players.length)
                     continue;
-                system.runJob(SmartSpawner.generateSpawnerLoot(location, dimensionId));
+                system.runJob(ActiveSpawner.generateSpawnerLoot(location, dimensionId));
                 system.runJob(this.createSpawnerParticles(location, dimension));
             }
         }, seconds * 20);
@@ -47,4 +47,4 @@ export class SmartSpawnerGenerator {
         catch (error) { }
     }
 }
-let runId = SmartSpawnerGenerator.generateInterval(configuration.spawner.delay);
+let runId = ActiveSpawnerGenerator.generateInterval(configuration.spawner.delay);

@@ -1,8 +1,8 @@
-# SmartSpawner (Bedrock Edition)
+# ActiveSpawner (Bedrock Edition)
 
-![Icon](./images/SmartSpawnerFlat.jpg)
+![Icon](./images/ActiveSpawnerFlat.jpg)
 
-This is the SmartSpawner addon, created for Bedrock Edition. Inspired by DonutSMP's spawner mechanism. Built in with Spawner Custom Loot. And with the Dynamic Loot System, most mob drops are already registered.
+This is the ActiveSpawner addon, created for Bedrock Edition. Inspired by DonutSMP's spawner mechanism. Built in with Spawner Custom Loot. And with the Dynamic Loot System, most mob drops are already registered.
 
 # Features
 
@@ -31,8 +31,8 @@ To customize a loot you can use the /ssloot commands. Making a README.md makes m
 
 | Command | Description |
 |--------|-------------|
-| `/givespawner <EntityType> [Amount] [Player]` | Give a Smart Spawner with the specified entity type. |
-| `/ssloot reload` | Reload all SmartSpawner loot configurations. |
+| `/givespawner <EntityType> [Amount] [Player]` | Give a Active Spawner with the specified entity type. |
+| `/ssloot reload` | Reload all ActiveSpawner loot configurations. |
 | `/ssloot list` | Show a list of all EntityTypes that have custom loot. |
 | `/ssloot check <EntityType>` | View custom loot data for the specified entity. |
 | `/ssloot create <EntityType> [hand\|hotbar\|inventory]` | Create custom loot using items from hand, hotbar, or inventory. |

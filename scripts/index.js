@@ -1,3 +1,3 @@
 import "./commands";
-import "./smartspawner";
+import "./activespawner";
 import "./generator";

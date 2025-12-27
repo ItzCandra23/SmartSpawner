@@ -2,7 +2,7 @@ import { BlockInventoryComponent, EntityInventoryComponent, EntityTypes, ItemEnc
 import { formatId } from "./utils/format";
 import { ItemJson } from "./utils/itemjson";
 import { MobExperiences } from "./mob_experiences";
-import { SmartSpawnerUI } from "./smartspawnerui";
+import { ActiveSpawnerUI } from "./activespawnerui";
 import { CustomLoot } from "./customloot";
 import { MobLootTables } from "./mob_loot_tables";
 export const configuration = {
@@ -106,23 +106,23 @@ export const configuration = {
         },
     },
 };
-export class SmartSpawner {
+export class ActiveSpawner {
     static getPrefixLore() {
         return "§s§m§a§r§t§s§p§a§w§n§e§r";
     }
-    /**Create Smart Spawner ItemStack
+    /**Create Active Spawner ItemStack
      * @throws Invalid ItemStack
      */
     static createItemStack(entityType, amount) {
         const itemStack = new ItemStack("minecraft:mob_spawner", amount);
         itemStack.nameTag = `§a${formatId(entityType.id)} Spawner`;
         itemStack.setLore([
-            this.getPrefixLore() + "§eA Smart Spawner",
+            this.getPrefixLore() + "§eA Active Spawner",
             entityType.id,
         ]);
         return itemStack;
     }
-    /**Get Smart Spawner Entity Type from ItemStack */
+    /**Get Active Spawner Entity Type from ItemStack */
     static getItemSpawnerType(itemStack) {
         if (itemStack.typeId !== "minecraft:mob_spawner")
             return undefined;
@@ -131,32 +131,32 @@ export class SmartSpawner {
             return undefined;
         return EntityTypes.get(lores[1]);
     }
-    /**Get all smart spawner data keys
-     * Format [SmartSpawnerBlock:DimensionId:X:Y:Z]
+    /**Get all active spawner data keys
+     * Format [ActiveSpawnerBlock:DimensionId:X:Y:Z]
      */
-    static getSmartSpawnerKeys() {
+    static getActiveSpawnerKeys() {
         return world.getDynamicPropertyIds().filter((v) => v.startsWith("SmartSpawnerBlock:"));
     }
-    /**Get all smart spawner data */
-    static getAllSmartSpawner() {
-        return this.getSmartSpawnerKeys().map((key) => JSON.parse(world.getDynamicProperty(key)));
+    /**Get all active spawner data */
+    static getAllActiveSpawner() {
+        return this.getActiveSpawnerKeys().map((key) => JSON.parse(world.getDynamicProperty(key)));
     }
-    /**Get smart spawner data */
-    static getSmartSpawner(location, dimensionId) {
+    /**Get active spawner data */
+    static getActiveSpawner(location, dimensionId) {
         const result = world.getDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${Math.floor(location.x)}:${Math.floor(location.y)}:${Math.floor(location.z)}`);
         if (!result)
             return undefined;
         return JSON.parse(result);
     }
-    /**Set Spawner as Smart Spawner
+    /**Set Spawner as Active Spawner
      * @throws Invalid Block Type
-     * @throws Already set as Smart Spawner
+     * @throws Already set as Active Spawner
      */
-    static setSmartSpawner(entityType, block) {
+    static setActiveSpawner(entityType, block) {
         if (block.typeId !== "minecraft:mob_spawner")
             throw new Error("Invalid block type!");
-        if (this.getSmartSpawner(block.location, block.dimension.id))
-            throw new Error("Already set as Smart Spawner");
+        if (this.getActiveSpawner(block.location, block.dimension.id))
+            throw new Error("Already set as Active Spawner");
         const key = `SmartSpawnerBlock:${block.dimension.id}:${Math.floor(block.location.x)}:${Math.floor(block.location.y)}:${Math.floor(block.location.z)}`;
         const data = {
             entityId: entityType.id,
@@ -169,19 +169,19 @@ export class SmartSpawner {
         world.setDynamicProperty(key, JSON.stringify(data));
         return [key, data];
     }
-    /**Delete Smart Spawner data */
-    static deleteSmartSpawner(location, dimensionId) {
+    /**Delete Active Spawner data */
+    static deleteActiveSpawner(location, dimensionId) {
         world.setDynamicProperty(`SmartSpawnerBlock:${dimensionId}:${Math.floor(location.x)}:${Math.floor(location.y)}:${Math.floor(location.z)}`);
     }
     /**Get spawner stack amount */
     static getSpawnerStack(location, dimensionId) {
-        return this.getSmartSpawner(location, dimensionId)?.stack;
+        return this.getActiveSpawner(location, dimensionId)?.stack;
     }
     /**Add spawner stack */
     static addSpawnerStack(amount, location, dimensionId) {
         if (amount < 1)
             throw new Error("Invalid amount!");
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         if (data.stack + amount > configuration.spawner.max_stack)
@@ -194,7 +194,7 @@ export class SmartSpawner {
     static takeSpawnerStack(amount, location, dimensionId, container) {
         if (amount < 1)
             throw new Error("Invalid amount!");
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         if ((data.stack - amount) < 1)
@@ -213,7 +213,7 @@ export class SmartSpawner {
     }
     /**Take all spawner stack */
     static takeAllSpawnerStack(location, dimensionId, container) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const amount = data.stack - 1;
@@ -259,7 +259,7 @@ export class SmartSpawner {
     }
     /**Get spawner raw loot inventory */
     static getRawInventory(location, dimensionId) {
-        return this.getSmartSpawner(location, dimensionId)?.inventory ?? [];
+        return this.getActiveSpawner(location, dimensionId)?.inventory ?? [];
     }
     /**Get spawner loot inventory */
     static getInventory(location, dimensionId) {
@@ -267,7 +267,7 @@ export class SmartSpawner {
     }
     /**Get spawner inventory size */
     static getInventorySize(location, dimensionId) {
-        const data = this.getSmartSpawner(location, dimensionId);
+        const data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             return undefined;
         const inventory_size = configuration.spawner.inventory_size;
@@ -277,7 +277,7 @@ export class SmartSpawner {
     }
     /**Add loot item to spawner inventory */
     static addInventoryLoot(itemJson, location, dimensionId) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const inventory = ItemJson.addItemToArray(itemJson, data.inventory);
@@ -286,7 +286,7 @@ export class SmartSpawner {
     }
     /**Take loot from spawner inventory slot */
     static takeInventoryLoot(slot, location, dimensionId, container) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const itemJson = data.inventory[slot];
@@ -305,7 +305,7 @@ export class SmartSpawner {
     }
     /**Take all loot from spawner inventory */
     static takeAllInventoryLoot(location, dimensionId, container) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const dimension = world.getDimension(dimensionId);
@@ -337,11 +337,11 @@ export class SmartSpawner {
     }
     /**Get spawner loot experience */
     static getExperience(location, dimensionId) {
-        return this.getSmartSpawner(location, dimensionId)?.expecience;
+        return this.getActiveSpawner(location, dimensionId)?.expecience;
     }
     /**Get spawner maximum experience storage */
     static getMaxExperience(location, dimensionId) {
-        const data = this.getSmartSpawner(location, dimensionId);
+        const data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             return undefined;
         const max_experience = configuration.spawner.max_experience;
@@ -351,7 +351,7 @@ export class SmartSpawner {
     }
     /**Add spawner loot experience */
     static addExperienceLoot(experience, location, dimensionId) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const max_experience = data.stack * configuration.spawner.max_experience;
@@ -365,7 +365,7 @@ export class SmartSpawner {
     }
     /**Take spawner experience loot */
     static takeExperienceLoot(player, location, dimensionId) {
-        let data = this.getSmartSpawner(location, dimensionId);
+        let data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             throw new Error("Spawner not found!");
         const xp = data.expecience;
@@ -375,7 +375,7 @@ export class SmartSpawner {
         return xp;
     }
     static *generateSpawnerLoot(location, dimensionId) {
-        const data = this.getSmartSpawner(location, dimensionId);
+        const data = this.getActiveSpawner(location, dimensionId);
         if (!data)
             return;
         const entityType = EntityTypes.get(data.entityId);
@@ -448,9 +448,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
     const now = Date.now();
     const interactDelay = InteractDelay.get(playerId) ?? 0;
     PlacingProcess.delete(playerId);
-    const smartspawner = SmartSpawner.getSmartSpawner(block.location, block.dimension.id);
+    const activespawner = ActiveSpawner.getActiveSpawner(block.location, block.dimension.id);
     if (itemStack && itemStack.typeId === "minecraft:mob_spawner") {
-        if (smartspawner) {
+        if (activespawner) {
             ev.cancel = true;
             if (now - interactDelay < 500)
                 return;
@@ -463,16 +463,16 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
                 const mainhand = container.getItem(selectedSlotIndex);
                 if (!mainhand)
                     return;
-                const entityType = SmartSpawner.getItemSpawnerType(mainhand);
+                const entityType = ActiveSpawner.getItemSpawnerType(mainhand);
                 if (!entityType)
                     return;
-                if (entityType.id !== smartspawner.entityId)
+                if (entityType.id !== activespawner.entityId)
                     return;
                 const amount = mainhand.amount;
                 const dimension = block.dimension;
                 const location = block.location;
                 try {
-                    const result = SmartSpawner.addSpawnerStack(1, location, dimension.id);
+                    const result = ActiveSpawner.addSpawnerStack(1, location, dimension.id);
                     if (amount > 1) {
                         mainhand.amount -= 1;
                         container.setItem(selectedSlotIndex, mainhand);
@@ -489,14 +489,14 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
             return;
         }
         else {
-            const entityType = SmartSpawner.getItemSpawnerType(itemStack);
+            const entityType = ActiveSpawner.getItemSpawnerType(itemStack);
             if (!entityType)
                 return;
             PlacingProcess.set(playerId, entityType);
             return;
         }
     }
-    if (smartspawner) {
+    if (activespawner) {
         ev.cancel = true;
         const now = Date.now();
         const interactDelay = InteractDelay.get(playerId) ?? 0;
@@ -504,7 +504,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
             return;
         InteractDelay.set(playerId, now);
         system.run(() => {
-            SmartSpawnerUI.openSpawner(player, block.location, block.dimension.id);
+            ActiveSpawnerUI.openSpawner(player, block.location, block.dimension.id);
         });
     }
 });
@@ -519,7 +519,7 @@ world.afterEvents.playerPlaceBlock.subscribe((ev) => {
     system.run(() => {
         const player = ev.player;
         try {
-            SmartSpawner.setSmartSpawner(entityType, block);
+            ActiveSpawner.setActiveSpawner(entityType, block);
             player.sendMessage(`§f[§d${formatId(entityType.id)}§f] Spawner §bActivated`);
             player.playSound("conduit.activate");
         }
@@ -536,8 +536,8 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
     const tool = ev.itemStack;
     const location = block.location;
     const dimensionId = block.dimension.id;
-    const smartspawner = SmartSpawner.getSmartSpawner(location, dimensionId);
-    if (!smartspawner)
+    const activespawner = ActiveSpawner.getActiveSpawner(location, dimensionId);
+    if (!activespawner)
         return;
     ev.cancel = true;
     system.run(() => {
@@ -546,29 +546,29 @@ world.beforeEvents.playerBreakBlock.subscribe((ev) => {
             return;
         }
         try {
-            if (smartspawner.stack > 1) {
+            if (activespawner.stack > 1) {
                 const container = block.above()?.getComponent(BlockInventoryComponent.componentId)?.container;
-                SmartSpawner.takeSpawnerStack(1, location, dimensionId, container);
+                ActiveSpawner.takeSpawnerStack(1, location, dimensionId, container);
             }
             else {
-                const itemStack = SmartSpawner.createItemStack({ id: smartspawner.entityId }, smartspawner.stack);
+                const itemStack = ActiveSpawner.createItemStack({ id: activespawner.entityId }, activespawner.stack);
                 const pos = { x: location.x + 0.5, y: location.y + 0.5, z: location.z + 0.5 };
-                SmartSpawner.deleteSmartSpawner(location, dimensionId);
+                ActiveSpawner.deleteActiveSpawner(location, dimensionId);
                 block.dimension.setBlockType(location, "minecraft:air");
                 block.dimension.spawnItem(itemStack, pos);
-                player.sendMessage(`§f[§d${formatId(smartspawner.entityId)}§f] Spawner §cDeactivated`);
+                player.sendMessage(`§f[§d${formatId(activespawner.entityId)}§f] Spawner §cDeactivated`);
                 player.playSound("conduit.deactivate");
             }
         }
         catch (err) {
-            SmartSpawner.deleteSmartSpawner(location, dimensionId);
+            ActiveSpawner.deleteActiveSpawner(location, dimensionId);
         }
     });
 });
 world.beforeEvents.explosion.subscribe((ev) => {
     let impactedBlocks = [];
     ev.getImpactedBlocks().forEach((block) => {
-        if (!SmartSpawner.getSmartSpawner(block.location, block.dimension.id))
+        if (!ActiveSpawner.getActiveSpawner(block.location, block.dimension.id))
             impactedBlocks.push(block);
     });
     ev.setImpactedBlocks(impactedBlocks);
